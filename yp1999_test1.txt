@@ -1,0 +1,137 @@
+《JS 錯誤處理 × 非同步流程 × 語感總整理筆記 v1》
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+■ 一、錯誤處理基礎語法：try...catch...finally
+----------------------------------------
+
+語法結構：
+try {
+  // 嘗試執行的主流程
+} catch (錯誤物件) {
+  // 如果 try 出錯，就執行這裡
+} finally {
+  // 不管成功或失敗，這裡都會執行（可省略）
+}
+
+語感翻譯：
+- try     = 先嘗試這樣做（主流程）
+- catch   = 如果錯了，就做備案（錯誤處理）
+- finally = 無論如何都要收尾（例如取消 loading）
+
+注意：
+- finally 裡面的 return 會蓋掉 try 或 catch 的 return。
+- 用於一定要做的事，如：關資料庫、釋放資源、畫面重設。
+
+常見用途：
+- 請求 API（對方沒回應或資料錯）
+- 解析 JSON（資料格式錯誤）
+- 處理表單輸入（輸入不合法或漏填）
+- 資料庫存取（Node.js、後端）
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+■ 二、Promise：管理非同步任務的結果
+----------------------------------------
+
+語法結構：
+const myPromise = new Promise((resolve, reject) => {
+  // 做某件事
+  if (成功) {
+    resolve(成功值);
+  } else {
+    reject(錯誤訊息);
+  }
+});
+
+myPromise
+  .then((成功結果) => {
+    // 成功時執行這裡
+  })
+  .catch((錯誤) => {
+    // 失敗時執行這裡
+  })
+  .finally(() => {
+    // 不管成功或失敗都會執行這裡
+  });
+
+語感翻譯：
+- resolve = 成功，進 .then()
+- reject  = 失敗，進 .catch()
+- finally = 不論結果，一定執行
+
+狀態說明（三階段）：
+- pending  = 等待中（尚未兌現）
+- resolved = 成功（承諾兌現）
+- rejected = 失敗（承諾失敗）
+
+補充 Q&A：
+Q：為何要用 new？
+A：Promise 是建構函式（像 new Date()），一建立就執行。
+   沒有 "先寫好" 再觸發這回事，會立刻執行裡面程式。
+
+Q：要同時做多件事怎麼辦？
+A：用物件或陣列包起來，之後搭配 Promise.all()（進階）
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+■ 三、async / await：讓非同步邏輯更像同步寫法
+----------------------------------------
+
+語法結構：
+async function 名稱() {
+  try {
+    const 結果 = await 某個 Promise;
+    // 成功後的處理
+  } catch (err) {
+    // 錯誤處理（對應 reject）
+  } finally {
+    // 收尾處理
+  }
+}
+
+語感翻譯：
+- async = 這是一個「會回傳 Promise」的函式
+- await = 等 Promise 的結果回來，才繼續往下執行
+- catch = 接住錯誤（如果 await 的東西是 rejected）
+
+規則限制：
+- await 只能寫在 async function 裡
+- await 後面必須是 Promise
+- 實際上拿到的是 resolve 的值（失敗則跳 catch）
+
+範例：
+async function getData() {
+  try {
+    const res = await fetch("https://api.com/data");
+    const data = await res.json();
+    console.log("資料成功", data);
+  } catch (err) {
+    console.error("錯誤處理", err);
+  } finally {
+    console.log("收尾動作");
+  }
+}
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+■ 四、邏輯流程對照小表
+----------------------------------------
+
+| 技術         | 成功            | 失敗           | 一定會做       |
+|--------------|-----------------|----------------|----------------|
+| Promise      | .then()         | .catch()       | .finally()     |
+| try / catch  | try 區塊        | catch 區塊     | finally 區塊   |
+| async / await| await 拿結果    | try 裡報錯     | finally 區塊   |
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+■ 五、結語語感總結
+----------------------------------------
+
+我做一件「可能會成功，也可能會失敗的事」，
+它也許需要等一段時間，
+我想保護流程不中斷，也要保證事情結束後能好好收尾。
+
+→ 用 try / catch 防爆炸  
+→ 用 Promise 處理等待邏輯  
+→ 用 async / await 寫得更順口
